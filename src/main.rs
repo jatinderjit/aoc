@@ -1,3 +1,6 @@
+use aoc24::day1;
+
 fn main() {
-    println!("Hello, world!");
+    let ans = day1::solve("inputs/day1.txt").unwrap();
+    println!("{ans}");
 }
