@@ -30,3 +30,15 @@ fn distance(left: &mut [i32], right: &mut [i32]) -> i32 {
     right.sort();
     left.iter().zip(right).map(|(l, r)| (*l - *r).abs()).sum()
 }
+
+#[cfg(test)]
+mod test {
+    use super::distance;
+
+    #[test]
+    fn test_distance() {
+        let mut left = vec![3, 4, 2, 1, 3, 3];
+        let mut right = vec![4, 3, 5, 3, 9, 3];
+        assert_eq!(distance(&mut left, &mut right), 11);
+    }
+}
