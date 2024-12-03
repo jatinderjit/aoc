@@ -1,5 +1,5 @@
-run:
-  cargo run
+run DAY:
+  cargo run {{ DAY }}
 
 test:
   cargo test
