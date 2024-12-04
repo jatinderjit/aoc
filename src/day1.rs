@@ -1,4 +1,4 @@
-use std::{collections::HashMap, error::Error, fs::File, io::Read};
+use std::{collections::HashMap, error::Error, fs};
 
 pub fn solve() {
     let (mut left, mut right) = read_input("inputs/day1.txt").unwrap();
@@ -24,14 +24,10 @@ fn similarity(left: &mut [i32], right: &mut [i32]) -> i32 {
 }
 
 fn read_input(input_path: &str) -> Result<(Vec<i32>, Vec<i32>), Box<dyn Error>> {
-    let mut f = File::open(input_path)?;
-
     let mut left = Vec::new();
     let mut right = Vec::new();
 
-    let mut buf = String::new();
-    f.read_to_string(&mut buf)?;
-
+    let buf = fs::read_to_string(input_path)?;
     buf.lines()
         .map(|line| {
             line.split("   ")

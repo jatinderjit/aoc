@@ -1,4 +1,4 @@
-use std::{error::Error, fs::File, io::Read};
+use std::{error::Error, fs};
 
 pub fn solve() {
     let reports = read_input("inputs/day2.txt").unwrap();
@@ -55,11 +55,7 @@ fn is_safe_with_max_one_bad_level(report: &[i32]) -> bool {
 }
 
 fn read_input(input_path: &str) -> Result<Vec<Vec<i32>>, Box<dyn Error>> {
-    let mut f = File::open(input_path)?;
-
-    let mut buf = String::new();
-    f.read_to_string(&mut buf)?;
-
+    let buf = fs::read_to_string(input_path)?;
     let reports = buf
         .lines()
         .map(|line| {
