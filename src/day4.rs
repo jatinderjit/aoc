@@ -1,7 +1,8 @@
 pub fn solve() {
     let text = std::fs::read_to_string("inputs/day4.txt").unwrap();
-    let lines = to_grid(text.lines());
-    println!("Part 1: {}", count_xmas(&lines));
+    let grid = to_grid(text.lines());
+    println!("Part 1: {}", count_xmas(&grid));
+    println!("Part 2: {}", count_cross_mas(&grid));
 }
 
 type Grid = Vec<Vec<char>>;
@@ -39,6 +40,23 @@ fn count_xmas(grid: &Grid) -> usize {
         }
     }
     ans
+}
+
+fn count_cross_mas(grid: &Grid) -> usize {
+    let mut count = 0;
+    let pairs = [('M', 'S'), ('S', 'M')];
+    for i in 1..(grid.len() - 1) {
+        for j in 1..(grid[0].len() - 1) {
+            if grid[i][j] == 'A' {
+                let p1 = (grid[i - 1][j - 1], grid[i + 1][j + 1]);
+                let p2 = (grid[i + 1][j - 1], grid[i - 1][j + 1]);
+                if pairs.contains(&p1) && pairs.contains(&p2) {
+                    count += 1;
+                }
+            }
+        }
+    }
+    count
 }
 
 fn exists_in_dir(grid: &Grid, word: &Word, start: Point, dir: Point) -> bool {
@@ -110,8 +128,23 @@ mod test {
             "MAMMMXMMMM",
             "MXMXAXMASX",
         ];
-        let grid = to_grid(rows);
-        assert_eq!(count_words_at(&grid, &to_word("XMAS"), (0, 0)), 0);
-        assert_eq!(count_xmas(&grid), 18);
+        assert_eq!(count_xmas(&to_grid(rows)), 18);
+    }
+
+    #[test]
+    fn test_count_cross_mas() {
+        let rows = [
+            "MMMSXXMASM",
+            "MSAMXMSMSA",
+            "AMXSXMAAMM",
+            "MSAMASMSMX",
+            "XMASAMXAMM",
+            "XXAMMXXAMA",
+            "SMSMSASXSS",
+            "SAXAMASAAA",
+            "MAMMMXMMMM",
+            "MXMXAXMASX",
+        ];
+        assert_eq!(count_cross_mas(&to_grid(rows)), 9);
     }
 }
