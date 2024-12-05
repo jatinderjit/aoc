@@ -1,20 +1,39 @@
-use std::{fs::File, io::Read};
+use std::{cmp::Ordering, fs::File, io::Read};
 
 pub fn solve() {
     let mut f = File::open("inputs/day5.txt").unwrap();
     let (deps, updates) = read_input(&mut f);
-    println!(
-        "Part 1: {}",
-        middle_page_of_correctly_ordered(&deps, &updates)
-    );
+    println!("Part 1: {}", correctly_ordered(&deps, &updates));
+    println!("Part 2: {}", incorrectly_ordered(&deps, &updates));
 }
 
-fn middle_page_of_correctly_ordered(deps: &[(u32, u32)], updates: &[Vec<u32>]) -> u32 {
+fn correctly_ordered(deps: &[(u32, u32)], updates: &[Vec<u32>]) -> u32 {
     updates
         .iter()
         .filter(|update| is_update_correctly_ordered(deps, update))
         .map(|update| update[update.len() / 2])
         .sum()
+}
+
+fn incorrectly_ordered(deps: &[(u32, u32)], updates: &[Vec<u32>]) -> u32 {
+    updates
+        .iter()
+        .filter(|update| !is_update_correctly_ordered(deps, update))
+        .map(|update| reorder(deps, update))
+        .map(|update| update[update.len() / 2])
+        .sum()
+}
+
+fn reorder(deps: &[(u32, u32)], update: &[u32]) -> Vec<u32> {
+    let mut update = update.to_vec();
+    update.sort_by(|num1, num2| {
+        if deps.contains(&(*num1, *num2)) {
+            Ordering::Less
+        } else {
+            Ordering::Greater
+        }
+    });
+    update
 }
 
 fn is_update_correctly_ordered(deps: &[(u32, u32)], update: &[u32]) -> bool {
@@ -62,18 +81,7 @@ mod tests {
     use std::io::Cursor;
 
     use super::*;
-
-    #[test]
-    fn test_read_input() {
-        let text = "1|2\n3|1\n3|2\n\n1,2,3\n2,1,3\n3,1,2";
-        let (deps, updates) = read_input(&mut Cursor::new(text));
-        assert_eq!(deps, vec![(1, 2), (3, 1), (3, 2)]);
-        assert_eq!(updates, vec![vec![1, 2, 3], vec![2, 1, 3], vec![3, 1, 2]]);
-    }
-
-    #[test]
-    fn test_middle_page_of_correctly_ordered() {
-        let text = "47|53
+    const TEST_TEXT: &str = "47|53
 97|13
 97|61
 97|47
@@ -101,8 +109,24 @@ mod tests {
 75,97,47,61,53
 61,13,29
 97,13,75,29,47";
-        let (deps, updates) = read_input(&mut Cursor::new(text));
 
-        assert_eq!(middle_page_of_correctly_ordered(&deps, &updates), 143);
+    #[test]
+    fn test_read_input() {
+        let text = "1|2\n3|1\n3|2\n\n1,2,3\n2,1,3\n3,1,2";
+        let (deps, updates) = read_input(&mut Cursor::new(text));
+        assert_eq!(deps, vec![(1, 2), (3, 1), (3, 2)]);
+        assert_eq!(updates, vec![vec![1, 2, 3], vec![2, 1, 3], vec![3, 1, 2]]);
+    }
+
+    #[test]
+    fn test_correctly_ordered() {
+        let (deps, updates) = read_input(&mut Cursor::new(TEST_TEXT));
+        assert_eq!(correctly_ordered(&deps, &updates), 143);
+    }
+
+    #[test]
+    fn test_incorrectly_ordered() {
+        let (deps, updates) = read_input(&mut Cursor::new(TEST_TEXT));
+        assert_eq!(incorrectly_ordered(&deps, &updates), 123);
     }
 }
