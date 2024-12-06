@@ -1,4 +1,4 @@
-use std::{fs::File, io::Read};
+use std::{collections::HashSet, fs::File, io::Read};
 
 pub fn solve() {
     let mut f = File::open("inputs/day6.txt").unwrap();
@@ -9,26 +9,24 @@ pub fn solve() {
 fn cells_visited(map: &[Vec<bool>], guard: Guard) -> usize {
     let mut guard = guard;
     let (m, n) = (map.len(), map[0].len());
-    let mut visited = vec![vec![false; n]; m];
+    let mut visited = HashSet::new();
+
     loop {
-        let (i, j) = guard.next_cell();
-        if i < 0 || i >= m as i32 || j < 0 || j >= n as i32 {
-            break;
-        }
-        if map[i as usize][j as usize] {
+        let (i, j) = match guard.next_cell() {
+            Some((i, j)) if i < m && j < n => (i, j),
+            _ => break,
+        };
+        if map[i][j] {
             guard.move_to((i, j));
-            visited[i as usize][j as usize] = true;
+            visited.insert((i, j));
         } else {
             guard.turn_right();
         }
     }
-    visited
-        .into_iter()
-        .map(|row| row.into_iter().filter(|v| *v).count())
-        .sum()
+    visited.len()
 }
 
-type Point = (i32, i32);
+type Point = (usize, usize);
 
 #[derive(Debug, PartialEq, Eq, Clone, Copy)]
 enum Dir {
@@ -56,14 +54,16 @@ struct Guard {
 }
 
 impl Guard {
-    fn next_cell(&self) -> Point {
+    fn next_cell(&self) -> Option<Point> {
         let (i, j) = self.pos;
-        match self.dir {
+        Some(match self.dir {
+            Dir::Up if i == 0 => return None,
             Dir::Up => (i - 1, j),
             Dir::Right => (i, j + 1),
             Dir::Down => (i + 1, j),
+            Dir::Left if j == 0 => return None,
             Dir::Left => (i, j - 1),
-        }
+        })
     }
 
     fn move_to(&mut self, pos: Point) {
@@ -88,8 +88,7 @@ fn read_input<R: Read>(reader: &mut R) -> (Vec<Vec<bool>>, Guard) {
                 .map(|(j, ch)| {
                     let (is_walkable, dir) = parse_cell(ch);
                     if let Some(dir) = dir {
-                        let pos = (i as i32, j as i32);
-                        guard = Some(Guard { pos, dir });
+                        guard = Some(Guard { pos: (i, j), dir });
                     }
                     is_walkable
                 })
