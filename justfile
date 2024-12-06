@@ -2,4 +2,4 @@ run DAY:
   cargo run {{ DAY }}
 
 test:
-  cargo test
+  cargo test -- --nocapture

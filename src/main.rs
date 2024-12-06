@@ -9,6 +9,7 @@ fn main() {
         day3::solve,
         day4::solve,
         day5::solve,
+        day6::solve,
     ];
     let mut args = args();
     args.next();
