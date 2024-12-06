@@ -1,29 +1,63 @@
-use std::{collections::HashSet, fs::File, io::Read};
+use std::{collections::HashMap, fs::File, io::Read};
 
 pub fn solve() {
     let mut f = File::open("inputs/day6.txt").unwrap();
     let (map, guard) = read_input(&mut f);
-    println!("Part 1: {}", cells_visited(&map, guard));
+
+    match cells_visited(&map, guard) {
+        GuardPath::Visited(visited) => println!("Part 1: {visited}"),
+        GuardPath::InLoop => unreachable!(),
+    };
+    println!("Part 2: {}", num_pos_for_loop(&map, guard));
 }
 
-fn cells_visited(map: &[Vec<bool>], guard: Guard) -> usize {
+#[derive(Debug, PartialEq)]
+enum GuardPath {
+    Visited(usize),
+    InLoop,
+}
+
+fn cells_visited(map: &[Vec<bool>], guard: Guard) -> GuardPath {
     let mut guard = guard;
     let (m, n) = (map.len(), map[0].len());
-    let mut visited = HashSet::new();
-
+    let mut visited = HashMap::new();
+    visited.insert(guard.pos, vec![guard.dir]);
     loop {
         let (i, j) = match guard.next_cell() {
             Some((i, j)) if i < m && j < n => (i, j),
-            _ => break,
+            _ => return GuardPath::Visited(visited.len()),
         };
         if map[i][j] {
+            let entry = visited.entry((i, j)).or_insert_with(Vec::new);
+            if entry.contains(&guard.dir) {
+                return GuardPath::InLoop;
+            }
+            entry.push(guard.dir);
             guard.move_to((i, j));
-            visited.insert((i, j));
         } else {
             guard.turn_right();
         }
     }
-    visited.len()
+}
+
+// Uses brute force
+fn num_pos_for_loop(map: &[Vec<bool>], guard: Guard) -> usize {
+    let mut count = 0;
+    let mut map = map.to_vec();
+    for i in 0..map.len() {
+        for j in 0..map[0].len() {
+            if map[i][j] && guard.pos != (i, j) {
+                println!("Testing: ({i}, {j})");
+                map[i][j] = false;
+                count += match cells_visited(&map, guard) {
+                    GuardPath::Visited(_) => 0,
+                    GuardPath::InLoop => 1,
+                };
+                map[i][j] = true;
+            }
+        }
+    }
+    count
 }
 
 type Point = (usize, usize);
@@ -145,6 +179,24 @@ mod tests {
 ......#...";
         let (map, guard) = read_input(&mut Cursor::new(map));
         let ans = cells_visited(&map, guard);
-        assert_eq!(ans, 41);
+        assert_eq!(ans, GuardPath::Visited(41));
+    }
+
+    #[test]
+    fn test_num_pos_for_loop() {
+        let map = "\
+....#.....
+.........#
+..........
+..#.......
+.......#..
+..........
+.#..^.....
+........#.
+#.........
+......#...";
+        let (map, guard) = read_input(&mut Cursor::new(map));
+        let ans = num_pos_for_loop(&map, guard);
+        assert_eq!(ans, 6);
     }
 }
